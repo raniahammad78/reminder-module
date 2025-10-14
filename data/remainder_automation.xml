@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- ========================================================= -->
+        <!-- Email Template: Reminder before Purchase Deadline          -->
+        <!-- This template sends an automated email to the configured   -->
+        <!-- recipient (reminder_recipient_email) before the deadline. -->
+        <!-- ========================================================= -->
+        <record id="email_template_remainder_deadline" model="mail.template">
+            <!-- Template name (visible in Settings > Technical > Email Templates) -->
+            <field name="name">Remainder: Purchase Deadline Reminder</field>
+
+            <!-- Link template to the custom model -->
+            <field name="model_id" ref="model_remainder_record"/>
+
+            <!-- Subject line (dynamic: includes product name) -->
+            <field name="subject">REMINDER: Deadline Approaching for ${object.product_name}</field>
+
+            <!-- Sender address: uses company email or fallback to current user's email -->
+            <field name="email_from">
+                "${object.product_name} Reminder" &lt;${(object.company_id.email or user.email_formatted or '')|safe}&gt;
+            </field>
+
+            <!-- Recipient email: comes from record field -->
+            <field name="email_to">${object.reminder_recipient_email|safe}</field>
+
+            <!-- Email Body (HTML) -->
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; background-color: #F0F0F0; font-family: sans-serif;">
+                    <p>Hello,</p>
+
+                    <p>
+                        This is an automated reminder that the purchase deadline
+                        for the following record is **
+                        <t t-out="object.reminder_days_before"/>
+                        days away**.
+                    </p>
+
+                    <!-- Record Details Table -->
+                    <table style="border-collapse: collapse; width: 100%; margin: 15px 0; max-width: 600px; border: 1px solid #ddd;">
+                        <tr>
+                            <th style="...">Product Name</th>
+                            <th style="...">Deadline</th>
+                            <th style="...">Total Value</th>
+                        </tr>
+                        <tr>
+                            <td style="...">
+                                <t t-out="object.product_name"/>
+                            </td>
+                            <td style="...">
+                                <t t-out="object.purchase_deadline"/>
+                            </td>
+                            <td style="...">
+                                <!-- Monetary formatting ensures proper currency display -->
+                                <t t-out="object.total_value"
+                                   t-options='{"widget": "monetary", "display_currency": object.currency_id}'/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Quick link back to the record inside Odoo -->
+                    <p>
+                        Please review this record:
+                        <a t-attf-href="/web#id=#{object.id}&amp;model=remainder.record&amp;view_type=form">
+                            Click here to view in Odoo
+                        </a>
+                    </p>
+
+                    <p>Thank you.</p>
+                </div>
+            </field>
+
+            <!-- Delete email automatically after sending (avoids clutter in mail queue) -->
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <!-- ========================================================= -->
+        <!-- Scheduled Action (Cron): Daily Check for Deadlines        -->
+        <!-- This cron executes the Python method that finds records   -->
+        <!-- nearing deadline and triggers the email template above.   -->
+        <!-- ========================================================= -->
+        <record id="ir_cron_remainder_deadline_check" model="ir.cron">
+            <!-- Cron job name (visible in Settings > Technical > Scheduled Actions) -->
+            <field name="name">Remainder: Send Deadline Reminders</field>
+
+            <!-- The model on which the cron will run -->
+            <field name="model_id" ref="model_remainder_record"/>
+
+            <!-- Code execution mode -->
+            <field name="state">code</field>
+
+            <!-- Calls the model method defined in Python (models/remainder_record.py) -->
+            <field name="code">model._check_and_send_deadline_reminder()</field>
+
+            <!-- Frequency: run once every day -->
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+        </record>
+    </data>
+</odoo>
