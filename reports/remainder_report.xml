@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Report Action Definition -->
+    <record id="action_report_remainder_record" model="ir.actions.report">
+        <!-- Name of the report as shown in the UI -->
+        <field name="name">Remainder Report</field>
+
+        <!-- The model this report is linked to -->
+        <field name="model">remainder.record</field>
+
+        <!-- Report type: here it is a PDF report generated with QWeb -->
+        <field name="report_type">qweb-pdf</field>
+
+        <!-- The QWeb template that will render the report -->
+        <field name="report_name">remainder.report_remainder_document</field>
+
+        <!-- The physical file identifier for the report -->
+        <field name="report_file">remainder.report_remainder_document</field>
+
+        <!-- Dynamic report filename: replaces %s with product_name -->
+        <field name="print_report_name">'Remainder - %s' % (object.product_name or 'N/A')</field>
+
+        <!-- Binding the report to the model menu (adds "Print" option in form view) -->
+        <field name="binding_model_id" ref="model_remainder_record"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- QWeb Template for Report Layout -->
+    <template id="report_remainder_document">
+        <!-- Wrap inside standard HTML container -->
+        <t t-call="web.html_container">
+
+            <!-- Loop through all selected records when printing multiple reports -->
+            <t t-foreach="docs" t-as="doc">
+
+                <!-- Use Odoo's external layout (adds header/footer styles) -->
+                <t t-call="web.external_layout">
+
+                    <div class="page">
+                        <div class="oe_structure"/>
+                        <h2>Record Details</h2>
+
+                        <!-- Partner and Product Information -->
+                        <div class="row mt32 mb32">
+                            <div class="col-6">
+                                <strong>Partner Number:</strong>
+                                <p t-field="doc.partner_number"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>Product Name:</strong>
+                                <p t-field="doc.product_name"/>
+                            </div>
+                        </div>
+
+                        <!-- Deadline Information -->
+                        <p>
+                            <strong>Purchase Deadline:</strong>
+                            <span t-field="doc.purchase_deadline"/>
+                        </p>
+
+                        <!-- Table for Quantity, Price, and Total -->
+                        <table class="table table-sm mt16" name="remainder_table">
+                            <thead>
+                                <tr>
+                                    <th name="th_quantity" class="text-left">Quantity</th>
+                                    <th name="th_price" class="text-right">Price</th>
+                                    <th name="th_total" class="text-right">Total Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-left">
+                                        <span t-field="doc.quantity"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <!-- Monetary widget formats price using currency -->
+                                        <span t-field="doc.price"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    </td>
+                                    <td class="text-right">
+                                        <span t-field="doc.total_value"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Display record status -->
+                        <p class="mt32">
+                            <strong>Status:</strong>
+                            <span t-field="doc.state"/>
+                        </p>
+                    </div>
+
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
