@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        XML data for menu items of the Reminder module.
+        This file defines the root menu and a sub-menu for managing reminder records.
+    -->
+    <data noupdate="0">
+
+        <!--
+            Root menu for all Reminder-related actions.
+            - name: The displayed menu label in the Odoo UI.
+            - sequence: Defines menu order (lower numbers = higher priority).
+            - groups_id: Restricts access to internal users only (base.group_user).
+        -->
+        <record id="menu_remainder_root_record" model="ir.ui.menu">
+            <field name="name">Reminders</field>
+            <field name="sequence">1</field>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user')])]"/>
+        </record>
+
+        <!--
+            Sub-menu under "Reminders" for accessing Reminder Records.
+            - parent_id: Places this menu under the "Reminders" root menu.
+            - action: Links the menu to an action (likely tree/kanban/form view of reminder records).
+            - sequence: Defines order under the parent menu.
+        -->
+        <record id="menu_remainder_records_record" model="ir.ui.menu">
+            <field name="name">Remainder Records</field>
+            <field name="parent_id" ref="menu_remainder_root_record"/>
+            <field name="action" ref="action_remainder_record"/>
+            <field name="sequence">1</field>
+        </record>
+    </data>
+</odoo>
